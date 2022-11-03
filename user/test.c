@@ -1,104 +1,80 @@
 #include "kernel/types.h"
+#include "kernel/stat.h"
 #include "user/user.h"
-#include <stddef.h>
-
-void process(int p[]) {
-    int prime;
-    //子进程首先关闭管道的写
-    close(p[1]);
-
-    //从管道中读取数据,read会返回独到的字节数,使用 read 返回值作为读完的标志
-    if(read(p[0], &prime, sizeof(int)) > 0) {
-        //每个进程读到的第一个数字一定是素数
-        fprintf(1, "prime %d\n", prime);
-
-        int p2[2];
-        pipe(p2);
-       //开始 fork
-       //父进程要 write
-       if(fork() > 0) {
-            //关闭父进程 read 端
-            close(p2[0]);
-            //继续往下一个进程写
-            int i;
-            while(read(p[0], &i, sizeof(int)) > 0) {
-                // fprintf(1, "next proocess write %d\n", i);
-                if(i % prime != 0){
-                    write(p2[1], &i, sizeof(int));
-                }
-            }
-            //写完之后顺手关闭
-            close(p2[1]);
-            wait(0);
-
-       }
-       else{
-
-            // 关闭上一个进程的读端，用不到了，这里不容易想到
-            close(p[0]);
-            process(p2);
-
-       }
-
-       exit(0);
-
-    }
-
+#include "kernel/fs.h"
+ 
+char*
+fmtname(char *path) //格式化名字，把名字变成前面没有左斜杠/，仅仅保存文件名
+{
+  static char buf[DIRSIZ+1];
+  char *p;
+ 
+  // Find first character after last slash.
+  for(p=path+strlen(path); p >= path && *p != '/'; p--)
+    ;
+  p++;
+ 
+  // Return blank-padded name.
+  memmove(buf, p, strlen(p) + 1);
+  return buf;
 }
-
-int main(int argc, char* argv[]) {
-
-    // int p[2];
-    // pipe(p);
-    // int pid = fork();
-
-    // if(pid > 0) {
-    //             //父进程关闭管道读端
-    //     close(p[0]);
-    //     fprintf(1, "prime 2\n");
-    //     //父进程往管道中写
-    //     for(int i = 3; i <= 35; i++) {
-    //         if(i % 2 != 0) {
-    //             //write函数：将指针指向的内存地址处的内容写入文件描述符指向的文件
-    //             write(p[1], &i, sizeof(int));
-    //         }
-    //     }
-    //     //写完后关闭写端
-    //     close(p[1]);
-    //     wait(0); 
-    // } 
-    // else{
-    //     process(p);
-    // }
-    // exit(0);
-        int p[2];
-    pipe(p);
-    int pid = fork();
-    if (pid > 0) { // parent
-        close(p[0]);
-        fprintf(1, "prime 2\n");
-        for (int i = 3; i <= 35; ++i) {
-            if (i % 2 != 0) {
-                write(p[1], &i, 4);
-            }
+ 
+void
+find(char *path, char* findName)
+{
+  char buf[512], *p;
+  int fd;
+  struct dirent de;
+  struct stat st;
+ 
+  if((fd = open(path, 0)) < 0){
+    fprintf(2, "find: cannot open %s\n", path);
+    return;
+  }
+ 
+  if(fstat(fd, &st) < 0){
+    fprintf(2, "find: cannot stat %s\n", path);
+    close(fd);
+    return;
+  }
+ 
+  switch(st.type){
+  case T_FILE:// 如果是文件类型，那么比较，文件名是否匹配，匹配则输出
+    if(strcmp(fmtname(path), findName) == 0)
+      printf("%s\n", path);
+    break;
+  case T_DIR://如果是目录则递归去查找
+    if(strlen(path) + 1 + DIRSIZ + 1 > sizeof buf){
+      printf("find: path too long\n");
+      break;
+    }
+    strcpy(buf, path);
+    p = buf+strlen(buf);
+    *p++ = '/';//buf是一个绝对路径，p是一个文件名，并通过加"/"前缀拼接在buf的后面
+    while(read(fd, &de, sizeof(de)) == sizeof(de)){
+      if(de.inum == 0) {
+        continue;
         }
-        close(p[1]);
-        wait(0);
-    } else {
-        process(p);
+      memmove(p, de.name, DIRSIZ);//memmove, 把de.name信息复制p,其中de.name是char name[255],代表文件名
+      p[strlen(de.name)] = 0; // 设置文件名结束符
+        if(strcmp(de.name, ".") == 0 || strcmp(de.name, "..") == 0) {
+                continue;
+        }
+        find(buf, findName);
     }
-    exit(0);
+    break;
+  }
+  close(fd);
 }
-
-
-// warning: File "/root/MITOS/xv6-labs-2022/.gdbinit" auto-loading has been declined by your `auto-load safe-path' set to "$debugdir:$datadir/auto-load".
-// To enable execution of this file add
-//         add-auto-load-safe-path /root/MITOS/xv6-labs-2022/.gdbinit
-// line to your configuration file "/root/.gdbinit".
-// To completely disable this security protection add
-//         set auto-load safe-path /
-// line to your configuration file "/root/.gdbinit".
-// For more information about this security protection see the
-// "Auto-loading safe path" section in the GDB manual.  E.g., run from the shell:
-//         info "(gdb)Auto-loading safe path"
-
+ 
+int
+main(int argc, char *argv[])
+{
+ 
+  if(argc < 3){
+        printf("error argc num");
+    exit(0);
+  }
+  find(argv[1], argv[2]);
+  exit(0);
+}

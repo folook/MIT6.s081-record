@@ -193,7 +193,7 @@ UPROGS=\
 	$U/_forkexec\
 	$U/_primes\
 	$U/_test\
-
+	$U/_find\
 
 
 
