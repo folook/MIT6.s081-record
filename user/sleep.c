@@ -3,12 +3,22 @@
 #include "user/user.h"
 
 int main(int argc, char *argv[]) {
-    if(argc == 0) {
-        write(1, "please add args", 16);
+    if(argc != 2) {
+        fprintf(2, "please add args\n");
+        exit(1);
 
     }
 
-    char * s = argv[0];
+
+    if(argc == 1) {
+        fprintf(2, "1 args\n");
+        fprintf(1, argv[0]);
+        fprintf(1, "\n");
+        exit(1);
+
+    }
+
+    char * s = argv[1];
     int n = atoi(s);
     sleep(n);
 
