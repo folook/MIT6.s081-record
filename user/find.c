@@ -14,10 +14,10 @@ fmtname(char *path)
     ;
   p++;
 
-  // Return blank-padded name.
+  
   if(strlen(p) >= DIRSIZ)
     return p;
-  //细节！最大区别
+  //memmove是 mencopy 的安全版本
   memmove(buf, p, strlen(p) + 1); 
   //memset(buf+strlen(p), ' ', DIRSIZ-strlen(p));
   return buf;
@@ -62,9 +62,9 @@ find(char *path, char* findName) //相比 ls 多了一个参数
     while(read(fd, &de, sizeof(de)) == sizeof(de)){
       if(de.inum == 0)
         continue;
-      memmove(p, de.name, DIRSIZ);
-      //p[DIRSIZ] = 0;
-      p[strlen(de.name)] = 0;//修改 1
+      memmove(p, de.name, DIRSIZ);//这里很关键，p 指针本来指向 path （已经拼接了最后了'/'）的结束符，buf 指向 path 的开始，复制之后buf 指向了一个完整的路径，如"abc/echo"
+      p[DIRSIZ] = 0;
+      // p[strlen(de.name)] = 0;//修改 1
       if(strcmp(de.name, ".") == 0 || strcmp(de.name, "..") == 0){
         //printf("ls: cannot stat %s\n", buf);
         continue;
