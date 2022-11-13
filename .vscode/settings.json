@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "syscall.h": "c",
+        "user.h": "c",
+        "exception": "c",
+        "new": "c",
+        "defs.h": "c",
+        "proc.h": "c"
+    }
+}

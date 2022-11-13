@@ -91,3 +91,13 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_trace(void)
+{
+  int mask;
+  //从a0寄存器获取参数，虽然我还不知道什时候存进去的
+  argint(0, &mask);
+  myproc()->system_trace = mask;
+  return 0;
+}
