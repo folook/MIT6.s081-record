@@ -5,6 +5,7 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "sysinfo.h"
 
 uint64
 sys_exit(void)
@@ -99,5 +100,22 @@ sys_trace(void)
   //从a0寄存器获取参数，虽然我还不知道什时候存进去的
   argint(0, &mask);
   myproc()->system_trace = mask;
+  return 0;
+}
+
+uint64
+sys_sysinfo(void)
+{
+  uint64 addr;
+  argaddr(0, &addr);
+
+  struct sysinfo sinfo;
+  sinfo.freemem = count_free_mem(); // kalloc.c
+  sinfo.nproc = count_live_process(); // proc.c 
+  
+  // 使用 copyout，结合当前进程的页表，获得进程传进来的指针（逻辑地址）对应的物理地址
+  // 然后将 &sinfo 中的数据复制到该指针所指位置，供用户进程使用。
+  if(copyout(myproc()->pagetable, addr, (char *)&sinfo, sizeof(sinfo)) < 0)
+    return -1;
   return 0;
 }

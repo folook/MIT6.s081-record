@@ -30,6 +30,25 @@ kinit()
   freerange(end, (void*)PHYSTOP);
 }
 
+uint64
+count_free_mem(void)
+{
+  acquire(&kmem.lock); //锁内存管理结构，防止竞态条件出现
+
+  //统计空闲页数，乘上页大小 PGSIZE 就是空闲的内存字节数
+  uint64 mem_bytes = 0;
+  struct run *r = kmem.freelist;//xv6中，空闲内存页的记录方式是将空闲内存页本身直接作为链表的节点，形成一个空闲页链表，每次需要分配，就把链表根部对应的页分配出去。
+  while(r) {
+    mem_bytes += PGSIZE;
+    r = r ->next;
+
+  }
+  release(&kmem.lock);
+
+  return mem_bytes;
+
+}
+
 void
 freerange(void *pa_start, void *pa_end)
 {

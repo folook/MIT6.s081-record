@@ -5,6 +5,9 @@
         "exception": "c",
         "new": "c",
         "defs.h": "c",
-        "proc.h": "c"
+        "proc.h": "c",
+        "types.h": "c",
+        "sysinfo.h": "c",
+        "param.h": "c"
     }
 }

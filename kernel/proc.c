@@ -685,3 +685,19 @@ procdump(void)
     printf("\n");
   }
 }
+
+
+//获取运行中的进程数
+uint64
+count_live_process(void)
+{
+  uint64 process_num = 0;
+  for(struct proc *p = proc; p < &proc[NPROC]; p++) {
+
+    if(p->state != UNUSED) {
+      process_num++;
+    }
+
+  }
+  return process_num;
+}
