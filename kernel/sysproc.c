@@ -119,3 +119,21 @@ sys_sysinfo(void)
     return -1;
   return 0;
 }
+
+uint64
+sys_fu(void)
+{
+  int funum;
+  argint(0, &funum);
+
+  struct proc *p = myproc();
+
+  acquire(&p->lock);
+
+  printf("argv = %s", funum);
+  
+  release(&p->lock);
+
+  return 0;
+}
+
