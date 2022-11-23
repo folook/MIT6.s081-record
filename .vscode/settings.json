@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "memlayout.h": "c",
+        "proc.h": "c",
+        "riscv.h": "c",
+        "spinlock.h": "c",
+        "syscall.h": "c"
+    }
+}
