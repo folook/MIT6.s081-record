@@ -437,3 +437,62 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return -1;
   }
 }
+
+//print pte
+void vmprint(pagetable_t level2){
+  //好，现在已经拿到了宝贵的顶级页表指针 pagetable，接下来打印pte
+  // printf("page table %p\n", *pagetable); 
+  printf("page table %p\n", level2); //第一行直接打印pagetablr，得到页表地址
+
+  //接下来遍历这个页表，找到PTE_V有效的就打印
+  //这个打印顺序很有趣，就是很符合递归的顺序
+  for(int i = 0; i < 512; i++) {
+    pte_t level2_pte = level2[i];//level2[i]就是PTE的内容
+    // printf("%d..%p: ", i, level2_pte);
+    if(level2_pte & PTE_V) {
+      printf("..%d: ", i);
+      printf("pte %p pa %p\n", level2_pte, PTE2PA(level2_pte));
+      uint64 level1  = PTE2PA(level2_pte);
+
+      for(int j = 0; j < 512; j++) {
+        pte_t level1_pte = ((pagetable_t)level1)[j];
+        if(level1_pte & PTE_V) {
+          printf(".. ..%d: ", j);
+          printf("pte %p pa %p\n", level1_pte, PTE2PA(level1_pte));
+          uint64 level0  = PTE2PA(level1_pte);
+
+          for(int k = 0; k < 512; k++) {
+            pte_t level0_pte = ((pagetable_t)level0)[k];
+            if(level0_pte & PTE_V) {
+              printf(".. .. ..%d: ", k);
+              printf("pte %p pa %p\n", level0_pte, PTE2PA(level0_pte));
+            } 
+          }
+        }
+      }
+    }
+  } 
+
+}
+
+
+// //参考freewalk函数
+// // Recursively free page-table pages.
+// // All leaf mappings must already have been removed.
+// void
+// freewalk(pagetable_t pagetable)
+// {
+//   // there are 2^9 = 512 PTEs in a page table.
+//   for(int i = 0; i < 512; i++){
+//     pte_t pte = pagetable[i];
+//     if((pte & PTE_V) && (pte & (PTE_R|PTE_W|PTE_X)) == 0){
+//       // this PTE points to a lower-level page table.
+//       uint64 child = PTE2PA(pte);
+//       freewalk((pagetable_t)child);
+//       pagetable[i] = 0;
+//     } else if(pte & PTE_V){
+//       panic("freewalk: leaf");
+//     }
+//   }
+//   kfree((void*)pagetable);
+// }

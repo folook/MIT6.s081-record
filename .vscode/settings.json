@@ -4,6 +4,7 @@
         "proc.h": "c",
         "riscv.h": "c",
         "spinlock.h": "c",
-        "syscall.h": "c"
+        "syscall.h": "c",
+        "defs.h": "c"
     }
 }
