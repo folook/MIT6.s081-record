@@ -708,3 +708,27 @@ procdump(void)
     printf("\n");
   }
 }
+
+
+int
+pgaccess(void *base, int len, void *mask)
+{
+  void *pg = base;//用来遍历所有页的指针
+  struct  proc *proc = myproc();
+  uint32 ans = 0;
+  pagetable_t pagetable = proc->pagetable;
+  
+  for(int i = 0; i < len; i++) {
+    pg = base + PGSIZE * i;
+    
+    pte_t *pte = walk(pagetable, (uint64)pg, 0);
+     if (pte != 0 && ((*pte) & PTE_A)){
+      ans = ans | (1 << i);
+      *pte ^= PTE_A;  // clear PTE_A
+    }
+
+  }
+  // return ans;
+  return copyout(pagetable, (uint64)mask, (char *)&ans, sizeof(int));
+
+}
