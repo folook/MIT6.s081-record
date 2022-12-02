@@ -1,0 +1,50 @@
+从这一行可以看出来：
+24:	4635                	li	a2,13
+是a2寄存器保存了13这个数字
+Which registers contain arguments to functions?
+答案是 a0保存返回值，a1保存参数12，a2保存参数13
+------------------
+在main的汇编代码中，对于函数f和g的调用在哪里？
+
+
+没有具体的调用，编译器优化成了内联函数，直接产生函数调用的结果
+
+
+
+
+
+
+--------------------
+At what address is the function printf located?
+000000000000064a <printf>:
+
+void
+printf(const char *fmt, ...)
+{
+ 64a:	711d                	addi	sp,sp,-96
+ 答案是 0x64a
+
+ --------------------
+ What value is in the register ra just after the jalr to printf in main?
+ ra是return address寄存器，保存的应该是返回地址
+ 所以应该是printf执行完毕后的返回地址，应该是
+   34:	61a080e7          	jalr	1562(ra) # 64a <printf>
+  exit(0);
+  38:	4501                	li	a0,0
+  答案是 0x38
+  --------------------
+  RISC-V是小端，低地址保存低位数据
+unsigned int i = 0x00646c72;（在ASCII中,72对应r，6c对应l,64对应d）
+printf("H%x Wo%s", 57616, &i);
+------
+| 64 |   H
+| 6C |
+| 72 |   L
+------
+这里为什么i会打印出 rld 存疑
+56716 = 0xE110
+H + E110 + Wo + r + l + d，故输出为He110 World
+------------------------
+In the following code, what is going to be printed after 'y='?
+printf("x=%d y=%d", 3);
+应该打印出寄存器a2的值，因为printf会从a2寄存器中读取第三个参数作为y的值。
