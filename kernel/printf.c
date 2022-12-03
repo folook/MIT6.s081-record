@@ -185,7 +185,7 @@ backtrace() {
 
   printf("backace:\n");
   uint64 *fp = (uint64 *)r_fp(); //从寄存器中取值，把这个值赋给指针变量fp，指针fp指向了最后一个stack frame的顶部
-  while (PGROUNDDOWN((uint64)fp) != (uint64)fp)//fp本就是一个uint64，所以强转没影响
+  while (PGROUNDDOWN((uint64)fp) != (uint64)fp)//fp本就是一个uint64，所以强转没影响，这个page有4个stack frame，但是只会打印3个ra，因为最顶上的一个stack frame是最初的函数，没有人调用它，他没有ptre fp和return addr所以判断条件是发现到了最顶上的stack frame就不打印了
   {
     uint64 * retaddr = fp - 1;//指针运算，stack frame的前8byte存着return adress
     printf("%p\n", *retaddr);//使用 * 取值符取出return address并打印
