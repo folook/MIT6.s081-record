@@ -78,8 +78,26 @@ usertrap(void)
 
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2)
-    yield();
-
+  {
+      // printf("p->ticks: %d, and check p->alarm_interval: %d\n", p->pticks,p->alarm_interval);
+      if(p->alarm_interval == 0) { //sigalarm(0,0)
+        //ok 直接 usertrapret();
+      } else if(ticks - p->last_tick >= p->alarm_interval) {//到达指定时间间隔
+        // printf("time hit!: %d\n", p->alarm_interval);
+        p->last_tick = ticks;
+        if(p->alarm_trapframe == 0){//没有handler在运行
+          // printf("change epc, run halder!\n");
+          p->alarm_trapframe = (struct trapframe *)kalloc();//分配一个新page
+          memmove(p->alarm_trapframe, p->trapframe, PGSIZE);//用来保存原trapframe
+          p->trapframe->epc = p->alarm_handler;//将epc字段改为handler的地址，这样经过（p->trapframe->epc）-> SEPC -> PC， trap返回用户空间后就直接进入了handler函数
+        } else {
+          // printf("please wait,there is a handler is running......\n");
+        }
+      }else{
+        yield();
+      }
+      
+  }
   usertrapret();
 }
 

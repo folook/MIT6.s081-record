@@ -92,3 +92,38 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_sigalarm(void)
+{
+  int tick;
+  uint64 handler;
+
+  argint(0, &tick);
+  argaddr(1, &handler);
+
+  struct proc* p = myproc();
+
+  //只有调用到 sigalarm 系统调用才去初始化这些字段
+  p->alarm_interval = tick;  
+  p->alarm_handler = handler;
+  p->alarm_trapframe = 0;
+  acquire(&tickslock);
+  p->last_tick = ticks;
+  release(&tickslock);
+
+  return 0;
+}
+
+uint64
+sys_sigreturn(void)
+{
+  struct proc* p = myproc();
+
+  if(p->alarm_trapframe != 0){
+    *(p->trapframe) = *(p->alarm_trapframe);
+    kfree(p->alarm_trapframe);
+    p->alarm_trapframe = 0;
+  }
+  return 0;
+}

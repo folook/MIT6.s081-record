@@ -104,4 +104,9 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+
+  int alarm_interval;                   //在该进程执行时，kernel调用handler指向的fn的时间间隔
+  uint64 alarm_handler;                 //依旧是相同pid的，userapce的另一个函数
+  uint64 last_tick;            // the tick of alarm handler was called at last time
+  struct trapframe *alarm_trapframe;
 };
