@@ -16,6 +16,21 @@ void kernelvec();
 
 extern int devintr();
 
+// kernel/vm.c
+// 检查一个地址指向的页是否是懒复制页
+int uvmcheckcowpage(uint64 va) {
+  pte_t *pte;
+  struct proc *p = myproc();
+  pte = walk(p->pagetable, va, 0);
+  
+  if (pte !=0 && (*pte & PTE_V) && (*pte & PTE_COW)) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+
 void
 trapinit(void)
 {
@@ -28,6 +43,58 @@ trapinithart(void)
 {
   w_stvec((uint64)kernelvec);
 }
+
+int
+cow_handler(pagetable_t pagetable, uint64 va) {
+  pte_t *pte;
+  void *new_pa;
+  uint flags;
+
+    // ** va must be PGSIZE aligned
+  if ((va % PGSIZE) != 0) return -1;
+  
+  // ** safety check
+  if (va >= MAXVA) return -1;
+
+  pte = walk(pagetable, va, 0);
+  if (pte == 0) return -1;
+
+  uint64 pa = PTE2PA(*pte);
+  if (pa == 0) return -1;
+
+  if(*pte & PTE_COW) {//cow page，uvmcopy 已经初始化有 cow 一定没有 w bit
+    int cnt = krefget((void *)pa);
+
+    if(cnt == 1) {//唯一引用，直接修改标志位让其顺利写
+      *pte = (*pte | PTE_W) & (~PTE_COW);
+    } else if(cnt > 1) {//多个引用，不能随意写了，需要复制新页，这里的代码属于原 uvmcopy
+        new_pa = kalloc();
+        memmove(new_pa, (char*)pa, PGSIZE);
+
+        flags = PTE_FLAGS(*pte);
+        flags = (flags | PTE_W) & (~PTE_COW);
+
+        uvmunmap(pagetable, PGROUNDDOWN(va), 1, 0);
+        mappages(pagetable, va, PGSIZE, (uint64)new_pa, flags);
+        
+        krefdecr((void *)pa);//va 已经映射到 new_pa了，所以原 pa 引用计数减 1
+
+    } else {//
+      printf("cnt < 0\n");
+      return -1;
+    }
+
+    
+  } else if(!(*pte & PTE_COW) && (*pte & PTE_W)){// 没有 cow bit但是有 w bit，即普通的pf
+      return 0;
+  } else if(!(*pte & PTE_COW) && !(*pte & PTE_W)){//没有 cow bit 且没有 w bit，直接杀死
+      printf("cnt < 0\n");
+      return -1;
+  }
+  return 0;
+}
+
+
 
 //
 // handle an interrupt, exception, or system call from user space.
@@ -65,6 +132,14 @@ usertrap(void)
     intr_on();
 
     syscall();
+  } else if(r_scause() == 15) {
+    uint64 va = r_stval();
+    // ** If virtual address is over maximum va size or within guard page, kill the process
+    if (va >= MAXVA || (va < p->trapframe->sp && va >= (p->trapframe->sp - PGSIZE)))
+      p->killed = 1;
+    if (cow_handler(p->pagetable, PGROUNDDOWN(va)) == -1)
+      p->killed = 1;
+
   } else if((which_dev = devintr()) != 0){
     // ok
   } else {

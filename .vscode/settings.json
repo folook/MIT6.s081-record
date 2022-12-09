@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "proc.h": "c",
+        "syscall.h": "c",
+        "exception": "c",
+        "new": "c",
+        "user.h": "c",
+        "riscv.h": "c",
+        "defs.h": "c"
+    },
+    "editor.fontSize": 16,
+    "C_Cpp.errorSquiggles": "disabled"
+}
