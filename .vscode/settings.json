@@ -8,6 +8,9 @@
         "riscv.h": "c",
         "defs.h": "c"
     },
-    "editor.fontSize": 16,
-    "C_Cpp.errorSquiggles": "disabled"
+    "editor.fontSize": 30,
+    "C_Cpp.errorSquiggles": "disabled",
+    "debug.console.fontSize": 20,
+    "markdown.preview.fontSize": 20,
+    "terminal.integrated.fontSize": 26
 }
