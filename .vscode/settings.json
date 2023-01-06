@@ -1,0 +1,27 @@
+{
+    "files.associations": {
+        "*.tcc": "c",
+        "buf.h": "c",
+        "defs.h": "c",
+        "param.h": "c",
+        "spinlock.h": "c",
+        "fs.h": "c",
+        "riscv.h": "c",
+        "sleeplock.h": "c",
+        "unordered_map": "c",
+        "vector": "c",
+        "functional": "c",
+        "memory": "c",
+        "optional": "c",
+        "string_view": "c",
+        "string": "c",
+        "system_error": "c",
+        "ratio": "c",
+        "algorithm": "c",
+        "random": "c",
+        "istream": "c",
+        "numeric": "c",
+        "ranges": "c",
+        "streambuf": "c"
+    }
+}

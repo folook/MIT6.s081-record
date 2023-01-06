@@ -58,9 +58,9 @@ initlog(int dev, struct superblock *sb)
     panic("initlog: too big logheader");
 
   initlock(&log.lock, "log");
-  log.start = sb->logstart;
-  log.size = sb->nlog;
-  log.dev = dev;
+  log.start = sb->logstart;//log.start = 2
+  log.size = sb->nlog;//log.size = 30
+  log.dev = dev;//log.dev = 1
   recover_from_log();
 }
 
@@ -86,7 +86,7 @@ install_trans(int recovering)
 static void
 read_head(void)
 {
-  struct buf *buf = bread(log.dev, log.start);
+  struct buf *buf = bread(log.dev, log.start);//读取第一个 log block 的内容
   struct logheader *lh = (struct logheader *) (buf->data);
   int i;
   log.lh.n = lh->n;
